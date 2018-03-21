@@ -2296,7 +2296,7 @@ class Level implements ChunkManager, Metadatable{
 	 *
 	 * @return Chunk|null
 	 */
-	public function getChunk(int $x, int $z){
+	public function getChunk(int $x, int $z) : ?Chunk{
 		return $this->chunks[Level::chunkHash($x, $z)] ?? null;
 	}
 
