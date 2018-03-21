@@ -1004,7 +1004,7 @@ class Level implements ChunkManager, Metadatable{
 				unset($this->chunkTickList[$index]);
 			}
 
-			$chunk = $this->getLoadedChunk($chunkX, $chunkZ);
+			$chunk = $this->chunks[$index];
 			foreach($chunk->getEntities() as $entity){
 				$entity->scheduleUpdate();
 			}
