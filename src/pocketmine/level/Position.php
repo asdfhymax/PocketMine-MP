@@ -61,7 +61,7 @@ class Position extends Vector3{
 	 *
 	 * @return Level|null
 	 */
-	public function getLevel(){
+	public function getLevel() : ?Level{
 		if($this->level !== null and $this->level->isClosed()){
 			MainLogger::getLogger()->debug("Position was holding a reference to an unloaded Level");
 			$this->level = null;

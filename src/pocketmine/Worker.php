@@ -39,7 +39,7 @@ abstract class Worker extends \Worker{
 		return $this->classLoader;
 	}
 
-	public function setClassLoader(\ClassLoader $loader = null){
+	public function setClassLoader(\ClassLoader $loader = null) : void{
 		$this->composerAutoloaderPath = \pocketmine\COMPOSER_AUTOLOADER_PATH;
 
 		if($loader === null){
@@ -55,7 +55,7 @@ abstract class Worker extends \Worker{
 	 * If you do not do this, you will not be able to use new classes that were not loaded when the thread was started
 	 * (unless you are using a custom autoloader).
 	 */
-	public function registerClassLoader(){
+	public function registerClassLoader() : void{
 		if($this->composerAutoloaderPath !== null){
 			require $this->composerAutoloaderPath;
 		}
@@ -80,7 +80,7 @@ abstract class Worker extends \Worker{
 	/**
 	 * Stops the thread using the best way possible. Try to stop it yourself before calling this.
 	 */
-	public function quit(){
+	public function quit() : void{
 		$this->isKilled = true;
 
 		$this->notify();

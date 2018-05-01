@@ -60,7 +60,7 @@ class AsyncWorker extends Worker{
 		$store = [];
 	}
 
-	public function handleException(\Throwable $e){
+	public function handleException(\Throwable $e) : void{
 		$this->logger->logException($e);
 	}
 

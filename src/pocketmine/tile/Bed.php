@@ -45,7 +45,7 @@ class Bed extends Spawnable{
 		return $this->namedtag->getByte(self::TAG_COLOR);
 	}
 
-	public function setColor(int $color){
+	public function setColor(int $color) : void{
 		$this->namedtag->setByte(self::TAG_COLOR, $color & 0x0f);
 		$this->onChanged();
 	}

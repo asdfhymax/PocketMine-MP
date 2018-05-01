@@ -27,7 +27,7 @@ class AttributeMap implements \ArrayAccess{
 	/** @var Attribute[] */
 	private $attributes = [];
 
-	public function addAttribute(Attribute $attribute){
+	public function addAttribute(Attribute $attribute) : void{
 		$this->attributes[$attribute->getId()] = $attribute;
 	}
 
@@ -36,7 +36,7 @@ class AttributeMap implements \ArrayAccess{
 	 *
 	 * @return Attribute|null
 	 */
-	public function getAttribute(int $id){
+	public function getAttribute(int $id) : ?Attribute{
 		return $this->attributes[$id] ?? null;
 	}
 

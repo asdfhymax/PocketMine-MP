@@ -109,7 +109,7 @@ class McRegion extends BaseLevelProvider{
 	 *
 	 * @return Chunk|null
 	 */
-	protected function nbtDeserialize(string $data){
+	protected function nbtDeserialize(string $data) : ?Chunk{
 		$nbt = new BigEndianNBTStream();
 		$chunk = $nbt->readCompressed($data);
 		if(!($chunk instanceof CompoundTag) or !$chunk->hasTag("Level")){
@@ -218,7 +218,7 @@ class McRegion extends BaseLevelProvider{
 		return $isValid;
 	}
 
-	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []){
+	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []) : void{
 		if(!file_exists($path)){
 			mkdir($path, 0777, true);
 		}
@@ -266,11 +266,11 @@ class McRegion extends BaseLevelProvider{
 		return $this->levelData->getByte("Difficulty", Level::DIFFICULTY_NORMAL);
 	}
 
-	public function setDifficulty(int $difficulty){
+	public function setDifficulty(int $difficulty) : void{
 		$this->levelData->setByte("Difficulty", $difficulty);
 	}
 
-	public function doGarbageCollection(){
+	public function doGarbageCollection() : void{
 		$limit = time() - 300;
 		foreach($this->regions as $index => $region){
 			if($region->lastUsed <= $limit){
@@ -342,7 +342,7 @@ class McRegion extends BaseLevelProvider{
 		}
 	}
 
-	public function close(){
+	public function close() : void{
 		foreach($this->regions as $index => $region){
 			$region->close();
 			unset($this->regions[$index]);

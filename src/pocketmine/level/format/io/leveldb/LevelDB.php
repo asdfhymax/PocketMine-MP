@@ -163,7 +163,7 @@ class LevelDB extends BaseLevelProvider{
 		return file_exists($path . "/level.dat") and is_dir($path . "/db/");
 	}
 
-	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []){
+	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []) : void{
 		self::checkForLevelDBExtension();
 
 		if(!file_exists($path . "/db")){
@@ -239,7 +239,7 @@ class LevelDB extends BaseLevelProvider{
 
 	}
 
-	public function saveLevelData(){
+	public function saveLevelData() : void{
 		$this->levelData->setInt("NetworkVersion", ProtocolInfo::CURRENT_PROTOCOL);
 		$this->levelData->setInt("StorageVersion", self::CURRENT_STORAGE_VERSION);
 
@@ -260,7 +260,7 @@ class LevelDB extends BaseLevelProvider{
 		return $this->levelData->getInt("Difficulty", Level::DIFFICULTY_NORMAL);
 	}
 
-	public function setDifficulty(int $difficulty){
+	public function setDifficulty(int $difficulty) : void{
 		$this->levelData->setInt("Difficulty", $difficulty); //yes, this is intended! (in PE: int, PC: byte)
 	}
 
@@ -515,7 +515,7 @@ class LevelDB extends BaseLevelProvider{
 		return $this->db->get(LevelDB::chunkIndex($chunkX, $chunkZ) . self::TAG_VERSION) !== false;
 	}
 
-	public function close(){
+	public function close() : void{
 		$this->db->close();
 	}
 }

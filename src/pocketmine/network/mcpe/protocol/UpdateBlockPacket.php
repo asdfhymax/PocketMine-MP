@@ -51,13 +51,13 @@ class UpdateBlockPacket extends DataPacket{
 	/** @var int */
 	public $flags;
 
-	protected function decodePayload(){
+	protected function decodePayload() : void{
 		$this->getBlockPosition($this->x, $this->y, $this->z);
 		$this->blockRuntimeId = $this->getUnsignedVarInt();
 		$this->flags = $this->getUnsignedVarInt();
 	}
 
-	protected function encodePayload(){
+	protected function encodePayload() : void{
 		$this->putBlockPosition($this->x, $this->y, $this->z);
 		$this->putUnsignedVarInt($this->blockRuntimeId);
 		$this->putUnsignedVarInt($this->flags);

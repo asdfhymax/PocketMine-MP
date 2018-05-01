@@ -85,7 +85,7 @@ abstract class AsyncTask extends Collectable{
 		return $this->serialized ? unserialize($this->result) : $this->result;
 	}
 
-	public function cancelRun(){
+	public function cancelRun() : void{
 		$this->cancelRun = true;
 	}
 
@@ -104,19 +104,19 @@ abstract class AsyncTask extends Collectable{
 	 * @param mixed $result
 	 * @param bool  $serialize
 	 */
-	public function setResult($result, bool $serialize = true){
+	public function setResult($result, bool $serialize = true) : void{
 		$this->result = $serialize ? serialize($result) : $result;
 		$this->serialized = $serialize;
 	}
 
-	public function setTaskId(int $taskId){
+	public function setTaskId(int $taskId) : void{
 		$this->taskId = $taskId;
 	}
 
 	/**
 	 * @return int|null
 	 */
-	public function getTaskId(){
+	public function getTaskId() : ?int{
 		return $this->taskId;
 	}
 
@@ -139,7 +139,7 @@ abstract class AsyncTask extends Collectable{
 	 * @param string $identifier
 	 * @param mixed  $value
 	 */
-	public function saveToThreadStore(string $identifier, $value){
+	public function saveToThreadStore(string $identifier, $value) : void{
 		global $store;
 		if(!$this->isGarbage()){
 			$store[$identifier] = $value;
@@ -171,7 +171,7 @@ abstract class AsyncTask extends Collectable{
 	 *
 	 * @param mixed $progress A value that can be safely serialize()'ed.
 	 */
-	public function publishProgress($progress){
+	public function publishProgress($progress) : void{
 		$this->progressUpdates[] = serialize($progress);
 	}
 
@@ -180,7 +180,7 @@ abstract class AsyncTask extends Collectable{
 	 *
 	 * @param Server $server
 	 */
-	public function checkProgressUpdates(Server $server){
+	public function checkProgressUpdates(Server $server) : void{
 		while($this->progressUpdates->count() !== 0){
 			$progress = $this->progressUpdates->shift();
 			$this->onProgressUpdate($server, unserialize($progress));
@@ -223,7 +223,7 @@ abstract class AsyncTask extends Collectable{
 	 *
 	 * @throws \BadMethodCallException if called from any thread except the main thread
 	 */
-	protected function storeLocal($complexData){
+	protected function storeLocal($complexData) : void{
 		$server = Server::getInstance();
 		if($server === null){
 			throw new \BadMethodCallException("Objects can only be stored from the main thread!");

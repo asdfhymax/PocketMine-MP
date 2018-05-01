@@ -91,7 +91,7 @@ class BaseLang{
 		return $this->langName;
 	}
 
-	protected static function loadLang(string $path, array &$d){
+	protected static function loadLang(string $path, array &$d) : bool{
 		if(file_exists($path)){
 			$d = array_map('stripcslashes', parse_ini_file($path, false, INI_SCANNER_RAW));
 			return true;
@@ -138,7 +138,7 @@ class BaseLang{
 	 *
 	 * @return string|null
 	 */
-	public function internalGet(string $id){
+	public function internalGet(string $id) : ?string{
 		if(isset($this->lang[$id])){
 			return $this->lang[$id];
 		}elseif(isset($this->fallbackLang[$id])){

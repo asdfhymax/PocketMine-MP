@@ -80,7 +80,7 @@ abstract class BaseLevelProvider implements LevelProvider{
 		return $this->levelData->getLong("Time", 0, true);
 	}
 
-	public function setTime(int $value){
+	public function setTime(int $value) : void{
 		$this->levelData->setLong("Time", $value, true); //some older PM worlds had this in the wrong format
 	}
 
@@ -88,7 +88,7 @@ abstract class BaseLevelProvider implements LevelProvider{
 		return $this->levelData->getLong("RandomSeed");
 	}
 
-	public function setSeed(int $value){
+	public function setSeed(int $value) : void{
 		$this->levelData->setLong("RandomSeed", $value);
 	}
 
@@ -96,13 +96,13 @@ abstract class BaseLevelProvider implements LevelProvider{
 		return new Vector3($this->levelData->getInt("SpawnX"), $this->levelData->getInt("SpawnY"), $this->levelData->getInt("SpawnZ"));
 	}
 
-	public function setSpawn(Vector3 $pos){
+	public function setSpawn(Vector3 $pos) : void{
 		$this->levelData->setInt("SpawnX", $pos->getFloorX());
 		$this->levelData->setInt("SpawnY", $pos->getFloorY());
 		$this->levelData->setInt("SpawnZ", $pos->getFloorZ());
 	}
 
-	public function doGarbageCollection(){
+	public function doGarbageCollection() : void{
 
 	}
 
@@ -113,7 +113,7 @@ abstract class BaseLevelProvider implements LevelProvider{
 		return $this->levelData;
 	}
 
-	public function saveLevelData(){
+	public function saveLevelData() : void{
 		$nbt = new BigEndianNBTStream();
 		$buffer = $nbt->writeCompressed(new CompoundTag("", [
 			$this->levelData

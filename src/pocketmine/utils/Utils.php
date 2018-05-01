@@ -46,7 +46,7 @@ class Utils{
 	 *
 	 * @return string
 	 */
-	public static function getCallableIdentifier(callable $variable){
+	public static function getCallableIdentifier(callable $variable) : string{
 		if(is_array($variable)){
 			return sha1(strtolower(spl_object_hash($variable[0])) . "::" . strtolower($variable[1]));
 		}else{
@@ -437,7 +437,7 @@ class Utils{
 	 *
 	 * @throws \RuntimeException if a cURL error occurs
 	 */
-	public static function simpleCurl(string $page, $timeout = 10, array $extraHeaders = [], array $extraOpts = [], callable $onSuccess = null){
+	public static function simpleCurl(string $page, $timeout = 10, array $extraHeaders = [], array $extraOpts = [], callable $onSuccess = null) : array{
 		if(!Utils::$online){
 			throw new \RuntimeException("Server is offline");
 		}
@@ -570,7 +570,7 @@ class Utils{
 	 *
 	 * @return int
 	 */
-	public static function getReferenceCount($value, $includeCurrent = true){
+	public static function getReferenceCount($value, bool $includeCurrent = true) : int{
 		ob_start();
 		debug_zval_dump($value);
 		$ret = explode("\n", ob_get_contents());

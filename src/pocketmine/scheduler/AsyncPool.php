@@ -61,7 +61,7 @@ class AsyncPool{
 		return $this->size;
 	}
 
-	public function increaseSize(int $newSize){
+	public function increaseSize(int $newSize) : void{
 		if($newSize > $this->size){
 
 			$memoryLimit = (int) max(-1, (int) $this->server->getProperty("memory.async-worker-hard-limit", 1024));
@@ -76,7 +76,7 @@ class AsyncPool{
 		}
 	}
 
-	public function submitTaskToWorker(AsyncTask $task, int $worker){
+	public function submitTaskToWorker(AsyncTask $task, int $worker) : void{
 		if(isset($this->tasks[$task->getTaskId()]) or $task->isGarbage()){
 			return;
 		}
@@ -110,7 +110,7 @@ class AsyncPool{
 		return $selectedWorker;
 	}
 
-	private function removeTask(AsyncTask $task, bool $force = false){
+	private function removeTask(AsyncTask $task, bool $force = false) : void{
 		if(isset($this->taskWorkers[$task->getTaskId()])){
 			if(!$force and ($task->isRunning() or !$task->isGarbage())){
 				return;
@@ -122,7 +122,7 @@ class AsyncPool{
 		unset($this->taskWorkers[$task->getTaskId()]);
 	}
 
-	public function removeTasks(){
+	public function removeTasks() : void{
 		do{
 			foreach($this->tasks as $task){
 				$task->cancelRun();
@@ -144,13 +144,13 @@ class AsyncPool{
 		$this->collectWorkers();
 	}
 
-	private function collectWorkers(){
+	private function collectWorkers() : void{
 		foreach($this->workers as $worker){
 			$worker->collect();
 		}
 	}
 
-	public function collectTasks(){
+	public function collectTasks() : void{
 		Timings::$schedulerAsyncTimer->startTiming();
 
 		foreach($this->tasks as $task){

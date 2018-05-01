@@ -78,7 +78,7 @@ abstract class BaseInventory implements Inventory{
 	 *
 	 * @param int $size
 	 */
-	public function setSize(int $size){
+	public function setSize(int $size) : void{
 		$this->slots->setSize($size);
 	}
 
