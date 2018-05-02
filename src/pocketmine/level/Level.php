@@ -317,27 +317,18 @@ class Level implements ChunkManager, Metadatable{
 	/**
 	 * Init the default level data
 	 *
-	 * @param Server $server
-	 * @param string $name
-	 * @param string $path
-	 * @param string $provider Class that extends LevelProvider
-	 *
-	 * @throws \Exception
+	 * @param Server        $server
+	 * @param string        $name
+	 * @param LevelProvider $provider
 	 */
-	public function __construct(Server $server, string $name, string $path, string $provider){
+	public function __construct(Server $server, string $name, LevelProvider $provider){
 		$this->blockStates = BlockFactory::getBlockStatesArray();
 		$this->levelId = static::$levelIdCounter++;
 		$this->blockMetadata = new BlockMetadataStore($this);
 		$this->server = $server;
 		$this->autoSave = $server->getAutoSave();
 
-		/** @var LevelProvider $provider */
-
-		if(is_subclass_of($provider, LevelProvider::class, true)){
-			$this->provider = new $provider($path);
-		}else{
-			throw new LevelException("Provider is not a subclass of LevelProvider");
-		}
+		$this->provider = $provider;
 
 		$this->displayName = $this->provider->getName();
 		$this->worldHeight = $this->provider->getWorldHeight();
@@ -441,9 +432,7 @@ class Level implements ChunkManager, Metadatable{
 			$this->unloadChunk($chunk->getX(), $chunk->getZ(), false);
 		}
 
-		if($this->getAutoSave()){
-			$this->save();
-		}
+		$this->save();
 
 		$this->unregisterGenerator();
 
@@ -1667,10 +1656,16 @@ class Level implements ChunkManager, Metadatable{
 			$item = ItemFactory::get(Item::AIR, 0, 0);
 		}
 
-		$drops = ($player !== null and $player->isCreative()) ? [] : array_merge(...array_map(function(Block $block) use ($item) : array{ return $block->getDrops($item); }, $affectedBlocks));
+		$drops = [];
+		$xpDrop = 0;
+
+		if($player !== null and !$player->isCreative()){
+			$drops = array_merge(...array_map(function(Block $block) use ($item) : array{ return $block->getDrops($item); }, $affectedBlocks));
+			$xpDrop = array_sum(array_map(function(Block $block) use ($item) : int{ return $block->getXpDropForTool($item); }, $affectedBlocks));
+		}
 
 		if($player !== null){
-			$ev = new BlockBreakEvent($player, $target, $item, $player->isCreative(), $drops);
+			$ev = new BlockBreakEvent($player, $target, $item, $player->isCreative(), $drops, $xpDrop);
 
 			if(($player->isSurvival() and !$target->isBreakable($item)) or $player->isSpectator()){
 				$ev->setCancelled();
@@ -1702,6 +1697,7 @@ class Level implements ChunkManager, Metadatable{
 			}
 
 			$drops = $ev->getDrops();
+			$xpDrop = $ev->getXpDropAmount();
 
 		}elseif(!$target->isBreakable($item)){
 			return false;
@@ -1720,6 +1716,10 @@ class Level implements ChunkManager, Metadatable{
 					$this->dropItem($dropPos, $drop);
 				}
 			}
+		}
+
+		if($xpDrop > 0){
+			$this->dropExperience($target->add(0.5, 0.5, 0.5), $xpDrop);
 		}
 
 		return true;

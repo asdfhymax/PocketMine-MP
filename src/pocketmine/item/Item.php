@@ -164,7 +164,7 @@ class Item implements ItemIds, \JsonSerializable{
 
 	public static function getCreativeItemIndex(Item $item) : int{
 		foreach(Item::$creative as $i => $d){
-			if($item->equals($d, !$item->isTool())){
+			if($item->equals($d, !($item instanceof Durable))){
 				return $i;
 			}
 		}
@@ -721,13 +721,6 @@ class Item implements ItemIds, \JsonSerializable{
 	 * @return bool
 	 */
 	public function useOn($object){
-		return false;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isTool(){
 		return false;
 	}
 

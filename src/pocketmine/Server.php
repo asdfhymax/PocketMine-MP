@@ -47,9 +47,9 @@ use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\lang\BaseLang;
 use pocketmine\lang\TextContainer;
+use pocketmine\level\biome\Biome;
 use pocketmine\level\format\io\LevelProvider;
 use pocketmine\level\format\io\LevelProviderManager;
-use pocketmine\level\generator\biome\Biome;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\Level;
 use pocketmine\level\LevelException;
@@ -1000,16 +1000,16 @@ class Server{
 
 		$path = $this->getDataPath() . "worlds/" . $name . "/";
 
-		$provider = LevelProviderManager::getProvider($path);
+		$providerClass = LevelProviderManager::getProvider($path);
 
-		if($provider === null){
+		if($providerClass === null){
 			$this->logger->error($this->getLanguage()->translateString("pocketmine.level.loadError", [$name, "Cannot identify format of world"]));
 
 			return false;
 		}
 
 		try{
-			$level = new Level($this, $name, $path, $provider);
+			$level = new Level($this, $name, new $providerClass($path));
 		}catch(\Throwable $e){
 
 			$this->logger->error($this->getLanguage()->translateString("pocketmine.level.loadError", [$name, $e->getMessage()]));
@@ -1053,16 +1053,16 @@ class Server{
 			$generator = Generator::getGenerator($this->getLevelType());
 		}
 
-		if(($provider = LevelProviderManager::getProviderByName($providerName = $this->getProperty("level-settings.default-format", "pmanvil"))) === null){
-			$provider = LevelProviderManager::getProviderByName($providerName = "pmanvil");
+		if(($providerClass = LevelProviderManager::getProviderByName($this->getProperty("level-settings.default-format", "pmanvil"))) === null){
+			$providerClass = LevelProviderManager::getProviderByName("pmanvil");
 		}
 
 		try{
 			$path = $this->getDataPath() . "worlds/" . $name . "/";
-			/** @var LevelProvider $provider */
-			$provider::generate($path, $name, $seed, $generator, $options);
+			/** @var LevelProvider $providerClass */
+			$providerClass::generate($path, $name, $seed, $generator, $options);
 
-			$level = new Level($this, $name, $path, (string) $provider);
+			$level = new Level($this, $name, new $providerClass($path));
 			$this->levels[$level->getId()] = $level;
 
 			$level->initLevel();
@@ -1516,7 +1516,7 @@ class Server{
 			$this->alwaysTickPlayers = (int) $this->getProperty("level-settings.always-tick-players", false);
 			$this->baseTickRate = (int) $this->getProperty("level-settings.base-tick-rate", 1);
 
-			$this->doTitleTick = (bool) $this->getProperty("console.title-tick", true);
+			$this->doTitleTick = ((bool) $this->getProperty("console.title-tick", true)) && Terminal::hasFormattingCodes();
 
 			$this->scheduler = new ServerScheduler();
 
@@ -1775,11 +1775,11 @@ class Server{
 	}
 
 	/**
-	 * @param string $title
-	 * @param string $subtitle
-	 * @param int    $fadeIn Duration in ticks for fade-in. If -1 is given, client-sided defaults will be used.
-	 * @param int    $stay Duration in ticks to stay on screen for
-	 * @param int    $fadeOut Duration in ticks for fade-out.
+	 * @param string        $title
+	 * @param string        $subtitle
+	 * @param int           $fadeIn Duration in ticks for fade-in. If -1 is given, client-sided defaults will be used.
+	 * @param int           $stay Duration in ticks to stay on screen for
+	 * @param int           $fadeOut Duration in ticks for fade-out.
 	 * @param Player[]|null $recipients
 	 *
 	 * @return int
@@ -2041,7 +2041,7 @@ class Server{
 				$this->scheduler->mainThreadHeartbeat(PHP_INT_MAX);
 			}
 
-			if($this->properties->hasChanged()){
+			if($this->properties !== null and $this->properties->hasChanged()){
 				$this->getLogger()->debug("Saving properties");
 				$this->properties->save();
 			}
@@ -2479,10 +2479,10 @@ class Server{
 	/**
 	 * Tries to execute a server tick
 	 */
-	private function tick() : bool{
+	private function tick() : void{
 		$tickTime = microtime(true);
 		if(($tickTime - $this->nextTick) < -0.025){ //Allow half a tick of diff
-			return false;
+			return;
 		}
 
 		Timings::$serverTickTimer->startTiming();
@@ -2511,7 +2511,7 @@ class Server{
 		}
 
 		if(($this->tickCounter % 20) === 0){
-			if($this->doTitleTick and Terminal::hasFormattingCodes()){
+			if($this->doTitleTick){
 				$this->titleTick();
 			}
 			$this->currentTPS = 20;
@@ -2576,8 +2576,6 @@ class Server{
 		}else{
 			$this->nextTick += 0.05;
 		}
-
-		return true;
 	}
 
 	/**
