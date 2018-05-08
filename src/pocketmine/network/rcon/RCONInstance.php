@@ -27,13 +27,24 @@ use pocketmine\Thread;
 use pocketmine\utils\Binary;
 
 class RCONInstance extends Thread{
-	public $stop;
+	private const STATUS_DISCONNECTED = -1;
+	private const STATUS_AUTHENTICATING = 0;
+	private const STATUS_CONNECTED = 1;
+
+	/** @var string */
 	public $cmd;
+	/** @var string */
 	public $response;
+
+	/** @var bool */
+	private $stop;
 	/** @var resource */
 	private $socket;
+	/** @var string */
 	private $password;
+	/** @var int */
 	private $maxClients;
+	/** @var bool */
 	private $waiting;
 
 	public function isWaiting(){
@@ -54,7 +65,7 @@ class RCONInstance extends Thread{
 		$this->maxClients = $maxClients;
 		for($n = 0; $n < $this->maxClients; ++$n){
 			$this->{"client" . $n} = null;
-			$this->{"status" . $n} = 0;
+			$this->{"status" . $n} = self::STATUS_DISCONNECTED;
 			$this->{"timeout" . $n} = 0;
 		}
 
@@ -69,7 +80,7 @@ class RCONInstance extends Thread{
 		return socket_write($client, Binary::writeLInt(strlen($pk)) . $pk);
 	}
 
-	private function readPacket($client, &$size, &$requestID, &$packetType, &$payload){
+	private function readPacket($client, &$requestID, &$packetType, &$payload){
 		socket_set_nonblock($client);
 		$d = socket_read($client, 4);
 		if($this->stop){
@@ -111,7 +122,7 @@ class RCONInstance extends Thread{
 					for($n = 0; $n < $this->maxClients; ++$n){
 						if($this->{"client" . $n} === null){
 							$this->{"client" . $n} = $client;
-							$this->{"status" . $n} = 0;
+							$this->{"status" . $n} = self::STATUS_AUTHENTICATING;
 							$this->{"timeout" . $n} = microtime(true) + 5;
 							$done = true;
 							break;
@@ -126,14 +137,14 @@ class RCONInstance extends Thread{
 			for($n = 0; $n < $this->maxClients; ++$n){
 				$client = &$this->{"client" . $n};
 				if($client !== null){
-					if($this->{"status" . $n} !== -1 and !$this->stop){
-						if($this->{"status" . $n} === 0 and $this->{"timeout" . $n} < microtime(true)){ //Timeout
-							$this->{"status" . $n} = -1;
+					if($this->{"status" . $n} !== self::STATUS_DISCONNECTED and !$this->stop){
+						if($this->{"status" . $n} === self::STATUS_AUTHENTICATING and $this->{"timeout" . $n} < microtime(true)){ //Timeout
+							$this->{"status" . $n} = self::STATUS_DISCONNECTED;
 							continue;
 						}
-						$p = $this->readPacket($client, $size, $requestID, $packetType, $payload);
+						$p = $this->readPacket($client, $requestID, $packetType, $payload);
 						if($p === false){
-							$this->{"status" . $n} = -1;
+							$this->{"status" . $n} = self::STATUS_DISCONNECTED;
 							continue;
 						}elseif($p === null){
 							continue;
@@ -141,9 +152,9 @@ class RCONInstance extends Thread{
 
 						switch($packetType){
 							case 3: //Login
-								if($this->{"status" . $n} !== 0){
-									$this->{"status" . $n} = -1;
-									continue;
+								if($this->{"status" . $n} !== self::STATUS_AUTHENTICATING){
+									$this->{"status" . $n} = self::STATUS_DISCONNECTED;
+									break;
 								}
 								if($payload === $this->password){
 									socket_getpeername($client, $addr, $port);
@@ -155,17 +166,16 @@ class RCONInstance extends Thread{
 									$this->waiting = false;
 									$this->response = "";
 									$this->writePacket($client, $requestID, 2, "");
-									$this->{"status" . $n} = 1;
+									$this->{"status" . $n} = self::STATUS_CONNECTED;
 								}else{
-									$this->{"status" . $n} = -1;
+									$this->{"status" . $n} = self::STATUS_DISCONNECTED;
 									$this->writePacket($client, -1, 2, "");
-									continue;
 								}
 								break;
 							case 2: //Command
-								if($this->{"status" . $n} !== 1){
-									$this->{"status" . $n} = -1;
-									continue;
+								if($this->{"status" . $n} !== self::STATUS_CONNECTED){
+									$this->{"status" . $n} = self::STATUS_DISCONNECTED;
+									break;
 								}
 								if(strlen($payload) > 0){
 									$this->cmd = ltrim($payload);
@@ -187,14 +197,12 @@ class RCONInstance extends Thread{
 						@socket_set_block($client);
 						@socket_read($client, 1);
 						@socket_close($client);
-						$this->{"status" . $n} = 0;
+						$this->{"status" . $n} = self::STATUS_DISCONNECTED;
 						$this->{"client" . $n} = null;
 					}
 				}
 			}
 		}
-		unset($this->socket, $this->cmd, $this->response, $this->stop);
-		exit(0);
 	}
 
 	public function getThreadName() : string{
